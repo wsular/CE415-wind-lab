@@ -9,7 +9,7 @@ Source: *Appendix B. Example Program* of the user manual
 | Red   | Wind speed signal         | `P1`   |
 | Black | Wind speed refererence    | ![Earth ground symbol](https://upload.wikimedia.org/wikipedia/commons/9/91/Earth_Ground.svg) |
 | Green | Wind direction signal     | `SE 1` |
-| Blue  | Wind direction excitation | `EX 1` |
+| Blue  | Wind direction excitation | `VX1`  |
 | White | Wind direction reference  | ![Earth ground symbol](https://upload.wikimedia.org/wikipedia/commons/9/91/Earth_Ground.svg) |
 | Clear | Wind direction shield     | ![Earth ground symbol](https://upload.wikimedia.org/wikipedia/commons/9/91/Earth_Ground.svg) |
 

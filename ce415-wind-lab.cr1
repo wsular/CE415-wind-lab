@@ -7,23 +7,20 @@
 ' Adapted from public examples.
 ''''''''''''''''''''''''''''''''''''''''''''''
 
-
-
-Public WS_ms
-Public WindDir
-Units WS_ms=meters/second
-Units WindDir=degrees
-
-DataTable(Table1,True,-1)
-DataInterval(0,60,Min,10)
-WindVector (1,WS_ms,WindDir,FP2,False,0,0,0)
-FieldNames("WS_ms_Avg,WindDir_Avg,WindDir_StDev")
-EndTable
-
-
-Const o34B_WS_PULSE = 1
+'''''''''''''''''''''''''' WIRING SETUP ''''''''''''''''''''''''' 
+Const o34B_P = 1    'wind speed pulse input: P1
+Const o34B_SE = 1   'wind direction signal: SE 1
+Const o34B_VX = 1   'wind direction excitation: VX1
 
 Const CSAT3B_SDM_ADDR = 3 'default address: 3
+
+
+''''''''''''''''''''''''''' VARIABLES ''''''''''''''''''''''''''''
+Public cup_WS
+Public vane_WD
+Units cup_WS=m/s
+Units vane_WD=degEofTN
+
 
 Public CSAT_vals(5)
 Alias CSAT_vals(1) = Ux
@@ -44,7 +41,8 @@ Alias CSAT_meta(3) = InclinePitch
 Alias CSAT_meta(4) = InclineRoll
 Units BoardTemp = degC
 Units BoardHumidity = %
-Units InclinePitch = 
+Units InclinePitch = deg
+Units InclineRoll = deg
 
 
 ''''''''''''''''''''''''' DATA TABLES '''''''''''''''''''''''''''''''''''
@@ -60,8 +58,24 @@ EndTable
 
 DataTable(CupVaneData,1,-1)
   DataInterval(0,1,Sec,10)
-  Sample(
+  Sample(1,cup_WS,IEEE4)
+  Sample(1,vane_WD,IEEE4)
 EndTable
+
+
+'''''''''''''''''''''' CUSTOM MENU '''''''''''''''''''''''''
+DisplayMenu("CE415 Wind Lab",-2)
+  DisplayValue("sonic Ux", Ux)
+  DisplayValue("sonic Uy", Uy)
+  DisplayValue("sonic Uz", Uz)
+  DisplayValue("sonic Ts", Ts)
+  DisplayValue("sonic diag", diag)
+'  DisplayValue("sonic WS", sonic_WS)
+'  DisplayValue("sonic WD", sonic_WD)
+  DisplayValue("cup WS", cup_WS)
+  DisplayValue("vane WD", vane_WD)
+EndMenu
+
 
 ''''''''''''''''''''''''' PROGRAM '''''''''''''''''''''''''''''''''''''''
 BeginProg
@@ -72,14 +86,14 @@ BeginProg
     CallTable(SonicData)
     
     CSAT3BMonitor(CSAT_meta(),0,CSAT3B_SDM_ADDR)
-    CallTable(MonitorData)
+    CallTable(SonicMetadata)
 
     '===== Cup & vane anemometer =====
-    PulseCount(WS_ms,1,o34B_WS_P,2,1,0.7989,0.28)
-    If WS_ms=0.2811 Then WS_ms=0
+    PulseCount(cup_WS,1,o34B_P,2,1,0.7989,0.28)
+    If cup_WS=0.2811 Then cup_WS=0
     
-    BrHalf(WindDir,1,mV2500,1,1,1,2500,True,0,_60Hz,720.0,0) 'Use 5000 mV
-    If (WindDir>=360 OR WindDir < 0) Then WindDir=0
+    BrHalf(vane_WD,1,mV2500,o34B_SE,o34B_VX,1,2500,True,0,_60Hz,720.0,0) 'Use 5000 mV
+    If (vane_WD>=360 OR vane_WD < 0) Then vane_WD=0
 
     CallTable(CupVaneData)
 
