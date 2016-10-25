@@ -1,0 +1,87 @@
+''''''''''''''''''''''''''''''''''''''''''''''
+' CE415 Meterology Lab
+'
+' Laboratory for Atmospheric Research
+' Washington State University
+'
+' Adapted from public examples.
+''''''''''''''''''''''''''''''''''''''''''''''
+
+
+
+Public WS_ms
+Public WindDir
+Units WS_ms=meters/second
+Units WindDir=degrees
+
+DataTable(Table1,True,-1)
+DataInterval(0,60,Min,10)
+WindVector (1,WS_ms,WindDir,FP2,False,0,0,0)
+FieldNames("WS_ms_Avg,WindDir_Avg,WindDir_StDev")
+EndTable
+
+
+Const o34B_WS_PULSE = 1
+
+Const CSAT3B_SDM_ADDR = 3 'default address: 3
+
+Public CSAT_vals(5)
+Alias CSAT_vals(1) = Ux
+Alias CSAT_vals(2) = Uy
+Alias CSAT_vals(3) = Uz
+Alias CSAT_vals(4) = Ts
+Alias CSAT_vals(5) = diag
+Units Ux = m/s
+Units Uy = m/s
+Units Uz = m/s
+Units Ts = degC
+Units diag = bitmap
+
+Public CSAT_meta(4)
+Alias CSAT_meta(1) = BoardTemp
+Alias CSAT_meta(2) = BoardHumidity
+Alias CSAT_meta(3) = InclinePitch
+Alias CSAT_meta(4) = InclineRoll
+Units BoardTemp = degC
+Units BoardHumidity = %
+Units InclinePitch = 
+
+
+''''''''''''''''''''''''' DATA TABLES '''''''''''''''''''''''''''''''''''
+DataTable(SonicData,1,-1)
+  'default record frequency = every call = 100ms
+  Sample(5,CSAT_vals(1),IEEE4)
+EndTable
+
+DataTable(SonicMetadata,1,-1)
+  DataInterval (0,5,Sec,10) 'record data every fifth second
+  Sample(4,CSAT_meta(1),IEEE4)
+EndTable
+
+DataTable(CupVaneData,1,-1)
+  DataInterval(0,1,Sec,10)
+  Sample(
+EndTable
+
+''''''''''''''''''''''''' PROGRAM '''''''''''''''''''''''''''''''''''''''
+BeginProg
+  Scan(100,msec,10,0) '10 Hz
+
+    '===== Sonic anemometer =====    
+    CSAT3B(CSAT_vals(),0,CSAT3B_SDM_ADDR,0)
+    CallTable(SonicData)
+    
+    CSAT3BMonitor(CSAT_meta(),0,CSAT3B_SDM_ADDR)
+    CallTable(MonitorData)
+
+    '===== Cup & vane anemometer =====
+    PulseCount(WS_ms,1,o34B_WS_P,2,1,0.7989,0.28)
+    If WS_ms=0.2811 Then WS_ms=0
+    
+    BrHalf(WindDir,1,mV2500,1,1,1,2500,True,0,_60Hz,720.0,0) 'Use 5000 mV
+    If (WindDir>=360 OR WindDir < 0) Then WindDir=0
+
+    CallTable(CupVaneData)
+
+  NextScan
+EndProg
